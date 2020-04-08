@@ -41,7 +41,7 @@ class Logger:
 
         if child:
             self._add_handler(logger, FileHandler(self.log_name, "a", encoding='utf-8', delay="true"),
-                              'PID%s' % getpid())
+                              'PID%s ' % getpid())
         else:
             self._add_handler(logger, FileHandler(self.log_name, "w", encoding='utf-8', delay="true"))
 
@@ -51,11 +51,9 @@ class Logger:
 
     def _add_handler(self, logger, handler, pid=''):
         handler.setLevel(DEBUG)
-        formatter = Formatter('%(levelname)s: ' + pid + '%(asctime)s '
-                                                        '%(filename)s:\t'
-                                                        '%(funcName)s():\t'
-                                                        '%(lineno)d:\t'
-                                                        '%(message)s')
+        format = '%(levelname)s: ' + pid + '%(asctime)s %(filename)s:\t%(funcName)s():\t%(lineno)d:\t%(message)s'
+
+        formatter = Formatter(format)
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
