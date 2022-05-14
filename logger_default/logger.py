@@ -69,7 +69,7 @@ class Logger:
         """
         logging_path = abspath(executable)
         logging_path, exe = split(logging_path)
-        if exe in ('python.exe', 'pythonw.exe'):  # Don't log to python directory
+        if exe not in ('python.exe', 'pythonw.exe'):  # Don't log to python directory
             logging_path = join(logging_path, _log_directory)
         else:
             logging_path = abspath(_log_directory)

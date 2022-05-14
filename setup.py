@@ -1,3 +1,4 @@
+import setuptools
 from distutils.core import setup
 from logger_default import __version__
 
