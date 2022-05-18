@@ -1,7 +1,8 @@
 from datetime import datetime
 from logging import DEBUG, INFO, getLogger, info, StreamHandler, Formatter, FileHandler
-from os import mkdir, listdir, getpid
-from os.path import join, exists, abspath, split
+from os import listdir, getpid, access, W_OK
+from os.path import split, expandvars
+from pathlib import Path
 from sys import executable, stdout
 
 from send2trash import send2trash
@@ -38,9 +39,9 @@ class Logger:
         self.log_name = self.delete_old_logs(logging_path, max_logfile_count)
 
         if self.log_name and child:
-            self.log_name = join(logging_path, self.log_name[-1])
+            self.log_name = Path(logging_path, self.log_name[-1])
         else:
-            self.log_name = join(logging_path, get_clean_date() + '.log')
+            self.log_name = Path(logging_path, get_clean_date() + '.log')
 
         if child:
             self._add_handler(logger, FileHandler(self.log_name, mode="a", encoding='utf-8', delay="true"),
@@ -67,14 +68,19 @@ class Logger:
         :param _log_directory: Directory name
         :return: Full directory path
         """
-        logging_path = abspath(executable)
+        logging_path = Path(executable).resolve()
         logging_path, exe = split(logging_path)
         if exe not in ('python.exe', 'pythonw.exe'):  # Don't log to python directory
-            logging_path = join(logging_path, _log_directory)
+            logging_path = Path(logging_path, _log_directory)
         else:
-            logging_path = abspath(_log_directory)
-        if not exists(logging_path):
-            mkdir(logging_path)
+            logging_path = Path(_log_directory).resolve()
+
+        if not access(logging_path, W_OK): # If writing access is denied, make directory in AppData/Roaming
+            # WINDOWS ONLY
+            app_data_path = Path(expandvars('%APPDATA%')).resolve()
+            logging_path = Path(app_data_path, *logging_path.parts[-2:])
+
+        logging_path.mkdir(parents=True, exist_ok=True)
         return logging_path
 
     @staticmethod
@@ -83,7 +89,7 @@ class Logger:
         dir_list = list(filter(lambda x: x.endswith(".log"), dir_list))
 
         for file in dir_list[:-max_count_logfiles]:
-            send2trash(join(logging_path, file))
+            send2trash(Path(logging_path, file))
 
         return dir_list
 
