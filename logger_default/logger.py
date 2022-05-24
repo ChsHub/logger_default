@@ -5,9 +5,6 @@ from os.path import split, expandvars
 from pathlib import Path
 from sys import executable, stdout
 
-from send2trash import send2trash
-
-
 def get_clean_date():
     return datetime.now().strftime("%Y-%m-%d_%H-%M-%S_%f")  # 2019-03-19 19_50_48_200077
 
@@ -62,7 +59,7 @@ class Logger:
         logger.addHandler(handler)
 
     @staticmethod
-    def _get_log_path(_log_directory: str) -> str:
+    def _get_log_path(_log_directory: str) -> Path:
         """
         Get path for saving logs
         :param _log_directory: Directory name
@@ -78,18 +75,26 @@ class Logger:
         if not access(logging_path, W_OK): # If writing access is denied, make directory in AppData/Roaming
             # WINDOWS ONLY
             app_data_path = Path(expandvars('%APPDATA%')).resolve()
+            if not app_data_path.exists():
+                raise FileNotFoundError
             logging_path = Path(app_data_path, *logging_path.parts[-2:])
 
         logging_path.mkdir(parents=True, exist_ok=True)
         return logging_path
 
     @staticmethod
-    def delete_old_logs(logging_path, max_count_logfiles):
+    def delete_old_logs(logging_path: Path, max_count_logfiles: int) -> list:
+        """
+        Delete old log files in directory
+        :param logging_path: Logging path
+        :param max_count_logfiles: Number of log files to be kept
+        :return: List of logging files
+        """
         dir_list = listdir(logging_path)
         dir_list = list(filter(lambda x: x.endswith(".log"), dir_list))
 
         for file in dir_list[:-max_count_logfiles]:
-            send2trash(Path(logging_path, file))
+            Path(logging_path, file).unlink(missing_ok=True)
 
         return dir_list
 
