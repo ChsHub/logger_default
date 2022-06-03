@@ -67,10 +67,13 @@ class Logger:
         """
         logging_path = Path(executable).resolve()
         logging_path, exe = split(logging_path)
-        if exe not in ('python.exe', 'pythonw.exe'):  # Don't log to python directory
-            logging_path = Path(logging_path, _log_directory)
-        else:
+        if exe in ('python.exe', 'pythonw.exe'):  # Don't log to python directory
             logging_path = Path(_log_directory).resolve()
+        else:
+            logging_path = Path(logging_path, _log_directory)
+            
+
+        logging_path = Path('.', logging_path).absolute()
 
         if not access(logging_path, W_OK): # If writing access is denied, make directory in AppData/Roaming
             # WINDOWS ONLY
